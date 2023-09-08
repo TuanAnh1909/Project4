@@ -12,7 +12,7 @@
     "dev": "npx ts-node-dev --respawn --transpile-only ./src/server.ts",
     "prod": "npx tsc && node ./www/server.js",
     "clean": "rm -rf www/ || true",
-    "deploy": "npm run build && eb list && eb use udagram-api-dev && eb deploy",
+    "deploy": "eb use udagram-api-dev && eb setenv AWS_BUCKET=project4-demo AWS_PROFILE=udacity AWS_REGION=$AWS_DEFAULT_REGION JWT_SECRET=$JWT_SECRET POSTGRES_DB=postgres POSTGRES_HOST=db-1.chfbysdpvds0.us-east-1.rds.amazonaws.com & eb deploy --staged udagram-api-dev & eb status",
     "build": "npm install . && npm run clean && tsc && cp -rf src/config www/config && cp -R .elasticbeanstalk www/.elasticbeanstalk && cp .npmrc www/.npmrc && cp package.json www/package.json && cd www && zip -r Archive.zip . && cd ..",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,16 +20,19 @@
   "author": "Gabriel Ruttner",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.405.0",
+    "@aws-sdk/s3-request-presigner": "^3.405.0",
     "@types/bcryptjs": "2.4.2",
     "@types/jsonwebtoken": "^8.3.2",
     "aws-sdk": "^2.429.0",
+    "aws-sdk-js-codemod": "^0.17.6",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "email-validator": "^2.0.4",
     "express": "^4.16.4",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.7.1",
     "reflect-metadata": "^0.1.13",
     "sequelize": "^6.26.0",
@@ -48,7 +51,7 @@
     "chai-http": "^4.2.1",
     "eslint": "^6.8.0",
     "eslint-config-google": "^0.14.0",
-    "mocha": "^6.1.4",
+    "mocha": "^10.2.0",
     "ts-node-dev": "^1.0.0-pre.32",
     "typescript": "^4.2.3"
   }

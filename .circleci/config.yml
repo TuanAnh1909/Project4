@@ -1,71 +1,74 @@
 version: 2.1
 orbs:
-  # orgs contain basc recipes and reproducible actions (install node, aws, etc.)
   node: circleci/node@5.0.2
   eb: circleci/aws-elastic-beanstalk@2.0.1
-  aws-cli: circleci/aws-cli@3.1.1
-  # different jobs are calles later in the workflows sections
+  aws-s3: circleci/aws-s3@3.1.1
 jobs:
   build:
     docker:
-      # the base image can run most needed actions with orbs
       - image: "cimg/node:14.15"
     steps:
-      # install node and checkout code
       - node/install:
-          node-version: '14.15'         
+          node-version: '14.15'
       - checkout
-      # Use root level package.json to install dependencies in the frontend app
       - run:
           name: Install Front-End Dependencies
           command: |
-            echo "NODE --version" 
-            echo $(node --version)
-            echo "NPM --version" 
-            echo $(npm --version)
             npm run frontend:install
-      # TODO: Install dependencies in the the backend API          
       - run:
           name: Install API Dependencies
           command: |
             npm run api:install
-       # TODO: Install dependencies in the the backend API          
       - run:
-          name: Install API Dependencies
+          name: Front-End Lint
           command: |
-            npm run frontend:install
-      # TODO: Build the frontend app
+            npm run frontend:lint
       - run:
           name: Front-End Build
           command: |
             npm run frontend:build
-      # TODO: Build the backend API      
       - run:
           name: API Build
           command: |
             npm run api:build
-  # deploy step will run only after manual approval
-  deploy:
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - udagram
+  deploy-frontend:
     docker:
-      - image: "cimg/base:stable"
-      # more setup needed for aws, node, elastic beanstalk
+      - image: cimg/base:stable
     steps:
       - node/install:
-          node-version: '14.15' 
-      - eb/setup
-      - aws-cli/setup
+          node-version: '14.15'
       - checkout
+      - attach_workspace:
+          at: ~/project
+      - aws-s3/copy:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-region: AWS_DEFAULT_REGION
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          from: udagram/udagram-frontend/www/
+          to: s3://project4-demo
+          arguments: --recursive
+  deploy-api:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - node/install:
+          node-version: '14.15'
+      - checkout
+      - attach_workspace:
+          at: ~/project
+      - eb/setup
       - run:
-          name: Deploy App
-          # TODO: Install, build, deploy in both apps
-          command: |
-            npm run deploy
-            
+          name: Deploy
+          command: npm run api:deploy
 workflows:
   udagram:
     jobs:
       - build
-      - hold:
+      - hold-frontend:
           filters:
             branches:
               only:
@@ -73,6 +76,17 @@ workflows:
           type: approval
           requires:
             - build
-      - deploy:
+      - hold-api:
+          filters:
+            branches:
+              only:
+                - master
+          type: approval
           requires:
-            - hold
+            - build
+      - deploy-frontend:
+          requires:
+            - hold-frontend
+      - deploy-api:
+          requires:
+            - hold-api

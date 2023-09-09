@@ -7,15 +7,15 @@ dotenv.config();
 // Are Also needed
 
 export const config = {
-  username: `postgres`,
-  password: 'postgres',
-  database: 'postgres',
-  host: 'db-1.chfbysdpvds0.us-east-1.rds.amazonaws.com',
-  aws_region: 'us-east-1',
-  aws_profile: 'default',
-  aws_media_bucket: 'project4-demo',
-  url: '',
+  username: `${process.env.POSTGRES_USERNAME}`,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB,
+  host: process.env.POSTGRES_HOST,
+  aws_region: process.env.AWS_REGION,
+  aws_profile: process.env.AWS_PROFILE,
+  aws_media_bucket: process.env.AWS_BUCKET,
+  url: process.env.URL,
   jwt: {
-    secret: 'qwertyuiopasdfghjklzxcvbnm123123123123123123123123123213123213213',
+    secret: process.env.JWT_SECRET,
   },
 };

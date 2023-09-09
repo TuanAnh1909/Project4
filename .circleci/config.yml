@@ -62,6 +62,9 @@ jobs:
           at: ~/project
       - eb/setup
       - run:
+          name: Create environment
+          command: eb create udagram-api-dev
+      - run:
           name: Deploy
           command: npm run api:deploy
 workflows:
